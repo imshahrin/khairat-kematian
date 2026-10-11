@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html><head><meta name="viewport" content="width=device-width, initial-scale=1"><script src="config.js"></script><title>Semakan Khairat Kematian</title><meta charset="utf-8">
+<style>
+body{font-family:system-ui,sans-serif;background:#f3f5f9;margin:0;padding:16px;color:#222}
+.kad{max-width:520px;margin:auto;background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px #0001}
+h1{font-size:1.3em;margin-top:0}label{display:block;margin-top:12px;font-weight:600}
+input{width:100%;box-sizing:border-box;padding:12px;font-size:16px;border:1px solid #ccc;border-radius:8px;margin-top:4px}
+button{width:100%;margin-top:16px;padding:12px;font-size:16px;border:0;border-radius:8px;background:#1a73e8;color:#fff}
+button:disabled{opacity:.6}.ralat{color:#c62828;margin-top:12px}
+.rekod{border-top:1px solid #eee;padding:10px 0;font-size:.95em}.jumlah{font-size:1.1em;font-weight:700;margin:12px 0}
+.badge{display:inline-block;padding:4px 12px;border-radius:12px;font-weight:700;color:#fff}.aktif{background:#2e7d32}.tamat{background:#c62828}.kotak{padding:12px;border-radius:8px;margin:12px 0}.kotak.tamat-bg{background:#fdecea;border:1px solid #c62828}.kotak.aktif-bg{background:#e8f5e9;border:1px solid #2e7d32}
+.s{font-size:.85em;padding:2px 8px;border-radius:10px;background:#eee}
+</style></head><body><div class="kad">
+<h1>Semakan Khairat Kematian</h1>
+<p>Masukkan nombor telefon dan email yang didaftarkan.</p>
+<form id="f"><label>No. Telefon</label><input id="tel" type="text" inputmode="tel" autocomplete="tel" placeholder="012-3456789" required><small style="color:#666">Contoh: 012-3456789 (dash pilihan)</small>
+<label>Email</label><input id="email" type="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="nama@contoh.com" required>
+<button id="b">Semak</button></form>
+<div id="hasil"></div></div>
+<script>
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+document.getElementById('f').addEventListener('submit',function(ev){
+  ev.preventDefault();var b=document.getElementById('b'),h=document.getElementById('hasil');
+  b.disabled=true;b.textContent='Menyemak...';h.innerHTML='';
+  api(CONFIG.PUBLIC_API,'semak',{tel:document.getElementById('tel').value,email:document.getElementById('email').value}).then(function(r){
+    b.disabled=false;b.textContent='Semak';
+    if(!r.ok){h.innerHTML='<p class="ralat">'+esc(r.mesej)+'</p>';return;}
+    var x='<h2>'+esc(r.nama)+' ('+esc(r.id)+')</h2><p>No. Telefon: '+esc(r.telefon)+'</p>';
+    if(r.adaRekod){x+='<div class="kotak '+(r.aktif?'aktif-bg':'tamat-bg')+'"><span class="badge '+(r.aktif?'aktif':'tamat')+'">'+(r.aktif?'AKTIF':'TAMAT')+'</span><br>Tamat tempoh: <b>'+esc(r.tamat)+'</b>'+(r.aktif?'':'<br>Keahlian anda telah tamat. Sila buat bayaran pembaharuan.')+'</div>';}
+    x+='<div class="jumlah">Jumlah dibayar: RM '+esc(r.jumlah)+'</div>';
+    var hb='';if(!r.rekod.length)hb+='<p>Tiada rekod bayaran lagi.</p>';
+    r.rekod.forEach(function(k){hb+='<div class="rekod"><b>'+esc(k.tarikh)+'</b> &middot; RM '+esc(k.jumlah)+' ('+esc(k.bil)+' tahun) <span class="s">'+esc(k.status)+'</span><br>'+esc(k.kaedah)+' &middot; Ruj: '+esc(k.rujukan)+'</div>';});
+    x+='<h3>Tanggungan ('+r.tanggungan.length+'/5)</h3>';
+    if(!r.tanggungan.length)x+='<p>Tiada tanggungan didaftarkan.</p>';
+    r.tanggungan.forEach(function(t){x+='<div class="rekod"><b>'+esc(t.nama)+'</b> <span class="s">'+esc(t.hubungan)+'</span><br>No. KP: '+esc(t.kp)+'</div>';});
+    x+='<h3>Rekod Bayaran</h3>';
+    h.innerHTML=x+hb;
+  }).catch(function(){b.disabled=false;b.textContent='Semak';h.innerHTML='<p class="ralat">Ralat sistem. Sila cuba lagi.</p>';});
+});
+</script></body></html>

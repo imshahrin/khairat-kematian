@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html><head><meta name="robots" content="noindex, nofollow"><meta name="viewport" content="width=device-width, initial-scale=1"><script src="config.js"></script><meta charset="utf-8"><title>Kerani Khairat Kematian</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,sans-serif;background:#f3f5f9;margin:0;padding:12px;color:#222}
+.w{max-width:640px;margin:auto}.kad{background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px #0001}
+h1{font-size:1.2em;margin:4px 0 8px}h2{font-size:1.05em;margin:0 0 8px}
+label{display:block;margin-top:10px;font-weight:600;font-size:.9em}
+input,select{width:100%;padding:11px;font-size:16px;border:1px solid #ccc;border-radius:8px;margin-top:4px}
+button{padding:11px 14px;font-size:15px;border:0;border-radius:8px;background:#1a73e8;color:#fff;margin-top:12px;cursor:pointer}
+button.k{background:#eee;color:#222}button.m{background:#c62828;padding:6px 10px;font-size:13px;margin:0}
+button:disabled{opacity:.6}.row{display:flex;gap:8px}.row>*{flex:1}
+.tabs{display:flex;gap:6px;overflow-x:auto}.tabs button{margin:0;background:#dde3ee;color:#222;flex:1}.tabs button.on{background:#1a73e8;color:#fff}
+.it{padding:9px 0;border-top:1px solid #eee;font-size:.93em}.it:first-child{border-top:0}
+.cl{cursor:pointer}.cl:hover{background:#f5f8ff}.msg{padding:10px;border-radius:8px;margin-top:10px;display:none}
+.ok{background:#e8f5e9;color:#1b5e20}.er{background:#fdecea;color:#b71c1c}
+.badge{display:inline-block;padding:3px 10px;border-radius:10px;color:#fff;font-weight:700;font-size:.85em}
+.Aktif{background:#2e7d32}.Tamat{background:#c62828}.Tiada{background:#777}
+small{color:#666}.hid{display:none!important}
+.hc{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;background:#fff;color:#222;border:2px solid #1a73e8;border-radius:10px;padding:12px;margin:8px 0 0;cursor:pointer;font-size:15px}
+.hc:hover,.hc:focus{background:#e8f0fe}.hc .bk{color:#1a73e8;font-weight:700;white-space:nowrap}
+</style></head><body><div class="w"><div id="banner" style="display:none;background:#ffeb3b;color:#000;font-weight:700;padding:10px;border-radius:8px;margin-bottom:12px;text-align:center">MOD TEST: semakan kerani dimatikan</div>
+<div class="kad"><h1>Kerani Khairat Kematian</h1><small id="saya">Menyemak akses...</small></div>
+<div id="app" class="hid">
+<div class="kad">
+  <label>Cari ahli (ID / nama / telefon)</label>
+  <div class="row"><input id="q" placeholder="cth: M015, Hasnul, 011-677"><button id="bc" style="flex:0 0 auto;margin-top:4px">Cari</button></div>
+  <div id="hasilCari"></div>
+  <button class="k" id="bBaru">+ Ahli baru</button> <button class="k" id="bMuat">&#8635; Muat semula data</button>
+</div>
+<div id="mesej" class="msg"></div>
+<div class="kad hid" id="borangAhli"><h2 id="tAhli">Ahli baru</h2>
+  <input type="hidden" id="aId">
+  <label>Nama</label><input id="aNama">
+  <label>No. Telefon</label><input id="aTel" inputmode="tel" placeholder="012-3456789"><small>Contoh: 012-3456789 (dash pilihan)</small>
+  <label>Email</label><input id="aEmail" type="email" autocapitalize="none" spellcheck="false">
+  <div class="row"><button id="bSimpanAhli">Simpan</button><button class="k" id="bBatalAhli">Batal</button></div>
+</div>
+<div id="paneAhli" class="hid">
+  <div class="kad" id="ringkas"></div>
+  <div class="kad"><div class="tabs"><button data-t="tB" class="on">Bayaran</button><button data-t="tT">Tanggungan</button><button data-t="tS">Sejarah</button></div></div>
+  <div class="kad" id="tB"><h2>Tambah Rekod Bayaran</h2>
+    <div class="row"><div><label>Tarikh</label><input id="pT" type="date"></div>
+    <div><label>Bil. Tahun</label><input id="pBil" type="number" min="1" max="20" value="1"></div></div>
+    <label>Jumlah (RM)</label><input id="pJ" readonly>
+    <div class="row"><div><label>Kaedah</label><select id="pK"><option>Tunai</option><option>FPX</option><option>DuitNow</option><option>Online Banking</option></select></div>
+    <div><label>Rujukan</label><input id="pR" placeholder="No. resit / ruj."></div></div>
+    <button id="bBayar">Rekod bayaran</button>
+  </div>
+  <div class="kad hid" id="tT"><h2>Tanggungan (<span id="nT">0</span>/5)</h2><div id="senaraiT"></div>
+    <div id="borangT"><label>Nama tanggungan</label><input id="dN">
+    <div class="row"><div><label>Hubungan</label><select id="dH"><option>Isteri</option><option>Suami</option><option>Anak</option><option>Ibu</option><option>Bapa</option></select></div>
+    <div><label>No. KP</label><input id="dK" inputmode="numeric" placeholder="YYMMDD-XX-XXXX"></div></div>
+    <button id="bTambahT">Tambah tanggungan</button></div>
+  </div>
+  <div class="kad hid" id="tS"><h2>Sejarah bayaran</h2><div id="sejarah"></div></div>
+</div>
+</div></div>
+<script>
+var semasa=null;
+function $(i){return document.getElementById(i);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function msg(t,ok){var m=$('mesej');m.textContent=t;m.className='msg '+(ok?'ok':'er');m.style.display='block';if(ok)setTimeout(function(){m.style.display='none';},4000);}
+function param(fn,arg){if(fn==='ringkasan')return {id:arg};if(fn==='cariAhli')return {q:arg};return arg==null?{}:{data:arg};}
+function run(fn,arg,ok,btn){if(btn)btn.disabled=true;
+  api(CONFIG.KERANI_API,fn,param(fn,arg)).then(function(r){if(btn)btn.disabled=false;ok(r);})
+  .catch(function(e){if(btn)btn.disabled=false;msg((e&&e.message)||'Ralat.',false);});}
+function hariIni(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function kira(){var b=Math.max(0,Math.floor(Number($('pBil').value)||0));$('pJ').value=(b*60).toFixed(2);}
+function papar(r){semasa=r;$('borangAhli').classList.add('hid');$('paneAhli').classList.remove('hid');
+  var st=r.status.split(' ')[0];
+  $('ringkas').innerHTML='<h2>'+esc(r.nama)+' ('+esc(r.id)+')</h2><span class="badge '+esc(st)+'">'+esc(r.status)+'</span>'+
+   '<div class="it">Tamat tempoh: <b>'+esc(r.tamat||'-')+'</b><br>Telefon: '+esc(r.telefon)+'<br>Email: '+esc(r.email)+'<br>Jumlah dibayar: RM '+esc(r.jumlah)+'</div>'+
+   '<button class="k" id="bEdit">Kemaskini maklumat</button>';
+  $('bEdit').onclick=function(){bukaAhli(r);};
+  $('nT').textContent=r.tanggungan.length;
+  $('senaraiT').innerHTML=r.tanggungan.length?r.tanggungan.map(function(t,i){return '<div class="it row"><div><b>'+esc(t.nama)+'</b> &middot; '+esc(t.hubungan)+'<br><small>'+esc(t.kp)+' &middot; '+esc(t.lahir)+'</small></div><div style="flex:0 0 auto"><button class="m" data-i="'+i+'">Buang</button></div></div>';}).join(''):'<p><small>Tiada tanggungan.</small></p>';
+  Array.prototype.forEach.call(document.querySelectorAll('#senaraiT button.m'),function(b){b.onclick=function(){var t=r.tanggungan[b.dataset.i];
+    if(confirm('Buang '+t.nama+'?'))run('buangTanggungan',{id:r.id,kp:t.kp},function(x){papar(x);msg('Tanggungan dibuang.',true);},b);};});
+  $('borangT').style.display=r.tanggungan.length>=5?'none':'block';
+  $('sejarah').innerHTML=r.rekod.length?r.rekod.map(function(k){return '<div class="it"><b>'+esc(k.tarikh)+'</b> &middot; '+esc(k.bil)+' thn &middot; RM '+esc(k.jumlah)+'<br><small>'+esc(k.kaedah)+' &middot; '+esc(k.rujukan)+' &middot; '+esc(k.status)+'</small></div>';}).join(''):'<p><small>Tiada rekod.</small></p>';
+}
+function bukaAhli(r){$('paneAhli').classList.add('hid');$('borangAhli').classList.remove('hid');
+  $('tAhli').textContent=r?'Kemaskini '+r.id:'Ahli baru (ID auto)';$('aId').value=r?r.id:'';
+  $('aNama').value=r?r.nama:'';$('aTel').value=r?r.telefon:'';$('aEmail').value=r?r.email:'';}
+function buka(id){run('ringkasan',id,papar);}
+$('bc').onclick=function(){var q=$('q').value;run('cariAhli',q,function(l){
+  $('borangAhli').classList.add('hid');
+  if(l.length===1){$('hasilCari').innerHTML='';buka(l[0].id);return;}
+  $('hasilCari').innerHTML=l.length?'<p><small>'+l.length+' padanan. Tekan untuk buka:</small></p>'+l.map(function(a){return '<button type="button" class="hc" data-id="'+esc(a.id)+'"><span><b>'+esc(a.id)+'</b> '+esc(a.nama)+'<br><small>'+esc(a.telefon)+'</small></span><span class="bk">Buka &rsaquo;</span></button>';}).join(''):'<p><small>Tiada padanan.</small></p>';
+  Array.prototype.forEach.call(document.querySelectorAll('#hasilCari .hc'),function(d){d.onclick=function(){$('hasilCari').innerHTML='';buka(d.dataset.id);};});
+},$('bc'));};
+$('q').addEventListener('keydown',function(e){if(e.key==='Enter'||e.keyCode===13){e.preventDefault();$('bc').click();}});
+$('bBaru').onclick=function(){$('hasilCari').innerHTML='';bukaAhli(null);};
+$('bBatalAhli').onclick=function(){$('borangAhli').classList.add('hid');if(semasa)$('paneAhli').classList.remove('hid');};
+$('bSimpanAhli').onclick=function(){
+  var tel=$('aTel').value.replace(/\s/g,'');
+  if(!/^01[0-46-9]-?[1-9]\d{6,7}$/.test(tel)){msg('No. telefon tidak sah. Contoh: 012-3456789',false);return;}
+  run('simpanAhli',{id:$('aId').value,nama:$('aNama').value,telefon:tel,email:$('aEmail').value},function(r){papar(r);msg('Maklumat ahli disimpan ('+r.id+').',true);},$('bSimpanAhli'));};
+$('bMuat').onclick=function(){run('muatSemula',null,function(){msg('Data dimuat semula.',true);if(semasa)buka(semasa.id);},$('bMuat'));};
+$('pBil').oninput=kira;
+$('bBayar').onclick=function(){if(!semasa)return;var b=Number($('pBil').value);
+  if(!confirm('Rekod '+b+' tahun (RM '+(b*60).toFixed(2)+') untuk '+semasa.nama+'?'))return;
+  run('rekodBayaran',{id:semasa.id,bil:b,kaedah:$('pK').value,rujukan:$('pR').value,tarikh:$('pT').value},function(r){papar(r);$('pR').value='';$('pBil').value=1;kira();msg('Bayaran direkod.',true);},$('bBayar'));};
+$('bTambahT').onclick=function(){if(!semasa)return;
+  run('tambahTanggungan',{id:semasa.id,nama:$('dN').value,hubungan:$('dH').value,kp:$('dK').value},function(r){papar(r);$('dN').value='';$('dK').value='';msg('Tanggungan ditambah.',true);},$('bTambahT'));};
+Array.prototype.forEach.call(document.querySelectorAll('.tabs button'),function(b){b.onclick=function(){
+  ['tB','tT','tS'].forEach(function(t){$(t).classList.toggle('hid',t!==b.dataset.t);});
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'),function(x){x.classList.toggle('on',x===b);});};});
+$('pT').value=hariIni();kira();
+api(CONFIG.KERANI_API,'siapaSaya',{}).then(function(r){$('saya').textContent=r.test?'':'Log masuk sebagai '+r.email;$('banner').style.display=r.test?'block':'none';$('app').classList.remove('hid');}).catch(function(e){$('saya').textContent=(e&&e.message)||'Akses ditolak.';});
+</script></body></html>
