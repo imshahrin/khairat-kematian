@@ -59,7 +59,7 @@ small{color:#666}.hid{display:none!important}
 var semasa=null;
 function $(i){return document.getElementById(i);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function msg(t,ok){var m=$('mesej');m.textContent=t;m.className='msg '+(ok?'ok':'er');m.style.display='block';if(ok)setTimeout(function(){m.style.display='none';},4000);}
+function msg(t,ok){var m=$('mesej');m.textContent=t;m.className='msg '+(ok?'ok':'er');m.style.display='block';if(ok)setTimeout(function(){m.style.display='none';},8000);}
 function param(fn,arg){if(fn==='ringkasan')return {id:arg};if(fn==='cariAhli')return {q:arg};return arg==null?{}:{data:arg};}
 var TULIS=['simpanAhli','rekodBayaran','tambahTanggungan','buangTanggungan'];
 // Selepas ralat sambungan pada tulis: muat data semasa supaya kerani nampak sama ada rekod sudah tersimpan.
@@ -70,6 +70,9 @@ function segar(fn,arg){
 function run(fn,arg,ok,btn){if(btn)btn.disabled=true;
   api(CONFIG.KERANI_API,fn,param(fn,arg)).then(function(r){if(btn)btn.disabled=false;
     if(r&&r.duplikat){msg((r.message||'Permintaan ini sudah diproses')+'. Data dikemas kini.',true);segar(fn,arg);return;}
+    if(TULIS.indexOf(fn)>=0){
+      if(r&&r.ok===false){msg(r.message||'Rekod tidak dapat disahkan dalam Sheet. Semak dahulu sebelum hantar semula.',false);segar(fn,arg);return;}
+      if(!r||r.disahkan!==true){msg('Rekod tidak dapat disahkan dalam Sheet. Semak dahulu sebelum hantar semula.',false);segar(fn,arg);return;}}
     ok(r);})
   .catch(function(e){if(btn)btn.disabled=false;
     if(TULIS.indexOf(fn)>=0&&e&&e.sambungan){msg('Sambungan terputus. Semak dahulu rekod sebelum hantar semula.',false);segar(fn,arg);return;}
@@ -85,7 +88,7 @@ function papar(r){semasa=r;$('borangAhli').classList.add('hid');$('paneAhli').cl
   $('nT').textContent=r.tanggungan.length;
   $('senaraiT').innerHTML=r.tanggungan.length?r.tanggungan.map(function(t,i){return '<div class="it row"><div><b>'+esc(t.nama)+'</b> &middot; '+esc(t.hubungan)+'<br><small>'+esc(t.kp)+' &middot; '+esc(t.lahir)+'</small></div><div style="flex:0 0 auto"><button class="m" data-i="'+i+'">Buang</button></div></div>';}).join(''):'<p><small>Tiada tanggungan.</small></p>';
   Array.prototype.forEach.call(document.querySelectorAll('#senaraiT button.m'),function(b){b.onclick=function(){var t=r.tanggungan[b.dataset.i];
-    if(confirm('Buang '+t.nama+'?'))run('buangTanggungan',{id:r.id,kp:t.kp},function(x){papar(x);msg('Tanggungan dibuang.',true);},b);};});
+    if(confirm('Buang '+t.nama+'?'))run('buangTanggungan',{id:r.id,kp:t.kp},function(x){papar(x);msg('Berjaya dibuang dan disahkan dalam Sheet: '+t.nama+' ('+x.id+' '+x.nama+')',true);},b);};});
   $('borangT').style.display=r.tanggungan.length>=5?'none':'block';
   $('sejarah').innerHTML=r.rekod.length?r.rekod.map(function(k){return '<div class="it"><b>'+esc(k.tarikh)+'</b> &middot; '+esc(k.bil)+' thn &middot; RM '+esc(k.jumlah)+'<br><small>'+esc(k.kaedah)+' &middot; '+esc(k.rujukan)+' &middot; '+esc(k.status)+'</small></div>';}).join(''):'<p><small>Tiada rekod.</small></p>';
 }
@@ -106,14 +109,15 @@ $('bBatalAhli').onclick=function(){$('borangAhli').classList.add('hid');if(semas
 $('bSimpanAhli').onclick=function(){
   var tel=$('aTel').value.replace(/\s/g,'');
   if(!/^01[0-46-9]-?[1-9]\d{6,7}$/.test(tel)){msg('No. telefon tidak sah. Contoh: 012-3456789',false);return;}
-  run('simpanAhli',{id:$('aId').value,nama:$('aNama').value,telefon:tel,email:$('aEmail').value},function(r){papar(r);msg('Maklumat ahli disimpan ('+r.id+').',true);},$('bSimpanAhli'));};
+  run('simpanAhli',{id:$('aId').value,nama:$('aNama').value,telefon:tel,email:$('aEmail').value},function(r){papar(r);msg('Berjaya disimpan dan disahkan dalam Sheet: '+r.id+' '+r.nama,true);},$('bSimpanAhli'));};
 $('bMuat').onclick=function(){run('muatSemula',null,function(){msg('Data dimuat semula.',true);if(semasa)buka(semasa.id);},$('bMuat'));};
 $('pBil').oninput=kira;
 $('bBayar').onclick=function(){if(!semasa)return;var b=Number($('pBil').value);
   if(!confirm('Rekod '+b+' tahun (RM '+(b*60).toFixed(2)+') untuk '+semasa.nama+'?'))return;
-  run('rekodBayaran',{id:semasa.id,bil:b,kaedah:$('pK').value,rujukan:$('pR').value,tarikh:$('pT').value},function(r){papar(r);$('pR').value='';$('pBil').value=1;kira();msg('Bayaran direkod.',true);},$('bBayar'));};
+  run('rekodBayaran',{id:semasa.id,bil:b,kaedah:$('pK').value,rujukan:$('pR').value,tarikh:$('pT').value},function(r){papar(r);$('pR').value='';$('pBil').value=1;kira();msg('Berjaya disimpan dan disahkan dalam Sheet: bayaran '+b+' tahun (RM '+(b*60).toFixed(2)+') untuk '+r.id+' '+r.nama,true);},$('bBayar'));};
 $('bTambahT').onclick=function(){if(!semasa)return;
-  run('tambahTanggungan',{id:semasa.id,nama:$('dN').value,hubungan:$('dH').value,kp:$('dK').value},function(r){papar(r);$('dN').value='';$('dK').value='';msg('Tanggungan ditambah.',true);},$('bTambahT'));};
+  var nm=$('dN').value.replace(/\s+/g,' ').trim();
+  run('tambahTanggungan',{id:semasa.id,nama:$('dN').value,hubungan:$('dH').value,kp:$('dK').value},function(r){papar(r);$('dN').value='';$('dK').value='';msg('Berjaya disimpan dan disahkan dalam Sheet: tanggungan '+nm+' ('+r.id+' '+r.nama+')',true);},$('bTambahT'));};
 Array.prototype.forEach.call(document.querySelectorAll('.tabs button'),function(b){b.onclick=function(){
   ['tB','tT','tS'].forEach(function(t){$(t).classList.toggle('hid',t!==b.dataset.t);});
   Array.prototype.forEach.call(document.querySelectorAll('.tabs button'),function(x){x.classList.toggle('on',x===b);});};});
